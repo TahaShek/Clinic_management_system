@@ -9,8 +9,6 @@ const validateRequest = (schema) =>  (req, res, next) => {
         throw new ApiError(400, errorMessages);
     }
 
-    console.log("value in validator::", value)
-
     req.body = value;
     next();
 };

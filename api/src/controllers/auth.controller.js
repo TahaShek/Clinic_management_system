@@ -66,25 +66,17 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 const signUp = asyncHandler(async (req, res) => {
 
-    // maybe we can add a feature if the user want to register right now or not? instead of sending an otp nonetheless
     const { name , email, password } = req.body;
 
     const doesUserExist = await User.findOne({ email });
 
     doesArgExist(doesUserExist, 409, "user with this email already exists");
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-
     const user = await User.create({
         name,
         email,
         password,
-        otp,
-        otpExpiry
     });
-
-    await sendEmail(email, "Verify Your Email", `Your OTP is: ${otp}`);
 
     const createdUser = await User.findById(user._id).select("-password");
 
@@ -109,6 +101,16 @@ const signIn = asyncHandler(async (req, res) => {
     const doesPasswordMatch = await user.isPasswordCorrect(password);
 
     doesArgExist(!doesPasswordMatch, 401, "invalid password");
+
+    if(!user.isEmailVerified) {
+        const emailVerificationToken = await user.generateEmailVerificationToken();
+
+        await sendEmail(
+            user.email,
+            "Verify Your Email",
+            emailVerificationToken
+        );
+    }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
 
@@ -153,10 +155,29 @@ const logOut = asyncHandler(async (req, res) => {
 });
 
 const verifyEmail = asyncHandler(async (req, res) => {
-    const { email, otp } = req.body;
+    const { token } = req.params;
 
-    doesArgExist(!email, 400, "email is required");
-    doesArgExist(!otp, 400, "otp is required");
+    doesArgExist(!token, 400, "no token provided");
+
+    let decodedToken;
+    try {
+        decodedToken = jwt.verify(token, process.env.EMAIL_VERIFICATION_TOKEN_SECRET);
+    } catch (error) {
+        throw new ApiError(401, "Invalid or expired token");
+    }
+
+    const user = await User.findById(decodedToken._id);
+
+    doesArgExist(!user, 404, "user not found");
+
+    if (user.isEmailVerified) {
+        return res.status(200).json(new ApiResponse(200, {}, "Email already verified"));
+    }
+
+    user.isEmailVerified = true;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json(new ApiResponse(200, {}, "email verified successfully"));
 });
 
 const tryMe = async (req, res) => {
@@ -165,4 +186,4 @@ const tryMe = async (req, res) => {
     )
 }
 
-export { signUp, signIn, refreshAccessToken, logOut, tryMe };
+export { signUp, signIn, refreshAccessToken, logOut, verifyEmail, tryMe };

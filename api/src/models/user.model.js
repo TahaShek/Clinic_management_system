@@ -30,8 +30,6 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    // TODO: implement redis
-    // why? having three fields for one time use only?
     otp: {
         type: String,
     },
@@ -55,10 +53,6 @@ userSchema.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.password)
 };
 
-// userSchema.methods.generateOtp = function() {
-//     return Math.floor(100000 + Math.random() * 900000).toString();
-// };
-
 userSchema.methods.generateAccessToken = async function () {
     return jwt.sign(
         {
@@ -78,6 +72,17 @@ userSchema.methods.generateRefreshToken = async function () {
         process.env.REFRESH_TOKEN_SECRET,
         {
             expiresIn: process.env.REFRESH_TOKEN_EXPIRY
+        }
+    )
+};
+userSchema.methods.generateEmailVerificationToken = async function () {
+    return jwt.sign(
+        {
+            _id: this._id,
+        },
+        process.env.EMAIL_VERIFICATION_TOKEN_SECRET,
+        {
+            expiresIn: process.env.EMAIL_VERIFICATION_TOKEN_EXPIRY
         }
     )
 };

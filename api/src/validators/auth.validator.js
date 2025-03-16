@@ -1,4 +1,5 @@
 import Joi from "joi";
+import { ROLES } from "../constants/constants.js";
 
 const signUpSchema = Joi.object({
     name: Joi.string().required().messages({
@@ -14,6 +15,9 @@ const signUpSchema = Joi.object({
         "string.empty": "Password is required",
         "string.min": "Password must be at least 6 characters long",
         "any.required": "Password is required",
+    }),
+    role: Joi.string().valid(...ROLES).messages({
+        "any.only": `Role must be one of ${ROLES}`,
     }),
 });
 
