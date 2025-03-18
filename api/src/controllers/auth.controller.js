@@ -5,7 +5,7 @@ import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken"
 import { MaxAgeOfAccessToken, MaxAgeOfRefreshToken } from "../constants/constants.js";
 import { doesArgExist } from "../utils/helpers.js";
-import { sendEmail } from "../services/sendEmail.js";
+import { addEmailToQueue } from "../queues/email.queue.js";
 
 const options = {
     httpOnly: true,
@@ -105,11 +105,8 @@ const signIn = asyncHandler(async (req, res) => {
     if(!user.isEmailVerified) {
         const emailVerificationToken = await user.generateEmailVerificationToken();
 
-        await sendEmail(
-            user.email,
-            "Verify Your Email",
-            emailVerificationToken
-        );
+        const jobId = await addEmailToQueue("sendEmail", { email: user.email, subject: "Verify your email", token: emailVerificationToken });
+        console.log("Email added to queue:: ", jobId);
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
