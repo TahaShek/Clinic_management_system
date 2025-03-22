@@ -16,9 +16,9 @@ const signUpSchema = Joi.object({
         "string.min": "Password must be at least 6 characters long",
         "any.required": "Password is required",
     }),
-    role: Joi.string().valid(...ROLES).messages({
-        "any.only": `Role must be one of ${ROLES}`,
-    }),
+    // role: Joi.string().valid(...ROLES).messages({
+    //     "any.only": `Role must be one of ${ROLES}`,
+    // }),
 });
 
 const signInSchema = Joi.object({

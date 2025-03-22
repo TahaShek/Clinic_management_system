@@ -22,8 +22,14 @@ app.use(cookieParser());
 
 // routes
 import authRoutes from "./routes/auth.routes.js"
+import patientRoutes from "./routes/patient.routes.js"
+import doctorRoutes from "./routes/doctor.routes.js"
+import adminRoutes from "./routes/admin.routes.js"
 
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/patient", patientRoutes);
+app.use("/api/v1/doctor", doctorRoutes);
 
 app.get("/", (req, res) => {
     res.send("Welcome...");

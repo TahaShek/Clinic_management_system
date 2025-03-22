@@ -24,17 +24,11 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         enum: ROLES,
-        default: "user",
+        default: "guest",
     },
     isEmailVerified: {
         type: Boolean,
         default: false,
-    },
-    otp: {
-        type: String,
-    },
-    otpExpiry: {
-        type: Date,
     },
     refreshToken: {
         type: String,

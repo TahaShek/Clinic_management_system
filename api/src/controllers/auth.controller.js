@@ -4,7 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken"
 import { MaxAgeOfAccessToken, MaxAgeOfRefreshToken } from "../constants/constants.js";
-import { doesArgExist } from "../utils/helpers.js";
+import { doesArgExist, validateRole } from "../utils/helpers.js";
 import { addEmailToQueue } from "../queues/email.queue.js";
 
 const options = {
@@ -177,10 +177,25 @@ const verifyEmail = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, {}, "email verified successfully"));
 });
 
+const getAllUsers = asyncHandler(async (req, res) => {
+    // TODO: pagination
+    const {user} = req;
+    validateRole("admin", user.role);
+
+    const users = await User.find().select("-password -refreshToken").lean();
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            { users },
+            "Users fetched successfully"
+        )
+    );
+});
 const tryMe = async (req, res) => {
     return res.status(200).json(
         new ApiResponse(200, { "user": "va lo lo tab tab taba di va saktu sak sak saka lee" }, "ok")
     )
 }
 
-export { signUp, signIn, refreshAccessToken, logOut, verifyEmail, tryMe };
+export { signUp, signIn, refreshAccessToken, logOut, verifyEmail, getAllUsers, tryMe };

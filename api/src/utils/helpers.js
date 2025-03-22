@@ -6,4 +6,10 @@ const doesArgExist = (value, statusCode, message) => {
     }
 };
 
-export { doesArgExist };
+const validateRole = (expectedRole, actualRole, statusCode = 401, message = "Access Denied") => {
+    if(expectedRole !== actualRole) {
+        throw new ApiError(statusCode, message);
+    }
+};
+
+export { doesArgExist, validateRole };
