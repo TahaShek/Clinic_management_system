@@ -1,17 +1,12 @@
+import { AppSidebarLayout } from "@/components/ui/app-sidebar";
 import { Outlet } from "react-router-dom";
 
 function Layout() {
   return (
     <>
-      <header>
-        <h1>My App Header</h1>
-      </header>
-      <main>
+      <AppSidebarLayout>
         <Outlet />
-      </main>
-      <footer>
-        <p>My App Footer</p>
-      </footer>
+      </AppSidebarLayout>
     </>
   );
 }

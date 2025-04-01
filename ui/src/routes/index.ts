@@ -6,7 +6,11 @@ import DashboardPage from "@/pages/dashboard";
 
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("@/pages/auth/RegisterPage"));
-
+const RoleSelection = lazy(() => import("@/pages/role-selection"));
+const PatientRegistration = lazy(
+  () => import("@/pages/patient-registration/index")
+);
+const DoctorRegistration = lazy(() => import("@/pages/doctor-registration"));
 const router = createBrowserRouter([
   {
     path: "/",
@@ -18,12 +22,24 @@ const router = createBrowserRouter([
     element: React.createElement(RegisterPage),
   },
   {
-    path: "dashboard",
+    path: "",
     element: React.createElement(Layout),
     children: [
       {
-        index: true,
+        path: "dashboard",
         element: React.createElement(DashboardPage),
+      },
+      {
+        path: "role-selection",
+        element: React.createElement(RoleSelection),
+      },
+      {
+        path: "patient-registration",
+        element: React.createElement(PatientRegistration),
+      },
+      {
+        path: "doctor-registration",
+        element: React.createElement(DoctorRegistration),
       },
     ],
   },
