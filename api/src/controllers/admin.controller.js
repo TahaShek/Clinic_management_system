@@ -32,7 +32,15 @@ const getDoctorsRequests = asyncHandler(async (req, res) => {
     const { user } = req;
     validateRole("admin", user.role);
 
-    const reqs = await Admin.findOne({ user: user._id });
+    const reqs = await Admin.findOne({ user: user._id })
+    .populate({
+        path: "doctorRequests.doctor",
+        populate: {
+            path: "user",
+            select: "firstName lastName email role"
+        }
+    })
+    .exec();
 
     if (!reqs || reqs.length === 0) {
         return res.status(404).json(

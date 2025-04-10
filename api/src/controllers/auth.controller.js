@@ -73,20 +73,23 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 const signUp = asyncHandler(async (req, res) => {
   // maybe we can add a feature if the user want to register right now or not? instead of sending an otp nonetheless
-  const { name, email, password, role } = req.body;
+  const { firstName, lastName, email, password, phoneNumber } = req.body;
 
+  const query = phoneNumber ? { $or: [{ email }, { phoneNumber }] } : { email };
 
-  const doesUserExist = await User.findOne({ email });
+  const doesUserExist = await User.findOne(query);
 
-  doesArgExist(doesUserExist, 409, "user with this email already exists");
+  doesArgExist(doesUserExist, 409, "user with this email or phone number already exists");
 
-    const user = await User.create({
-        name,
-        email,
-        password,
-    });
+  const user = await User.create({
+    firstName,
+    lastName,
+    email,
+    password,
+    phoneNumber,
+  });
 
-    const createdUser = await User.findById(user._id).select("-password");
+  const createdUser = await User.findById(user._id).select("-password");
 
   doesArgExist(
     !createdUser,
@@ -102,9 +105,18 @@ const signUp = asyncHandler(async (req, res) => {
 });
 
 const signIn = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { email, phoneNumber, password } = req.body;
 
-  const user = await User.findOne({ email });
+  if (!email && !phoneNumber) {
+    throw new ApiError(400, "Either email or phone number is required");
+  }
+  
+  const user = await User.findOne({
+    $or: [
+      ...(email ? [{ email }] : []),
+      ...(phoneNumber ? [{ phoneNumber }] : []),
+    ],
+  });
 
   doesArgExist(!user, 404, "no records found against this email");
 
@@ -112,14 +124,14 @@ const signIn = asyncHandler(async (req, res) => {
 
   doesArgExist(!doesPasswordMatch, 401, "invalid password");
 
-    if(!user.isEmailVerified) {
-        const emailVerificationToken = await user.generateEmailVerificationToken();
+  // if (!user.isEmailVerified) {
+  //   const emailVerificationToken = await user.generateEmailVerificationToken();
 
-        const jobId = await addEmailToQueue("sendEmail", { email: user.email, subject: "Verify your email", token: emailVerificationToken });
-        console.log("Email added to queue:: ", jobId);
-    }
+  //   const jobId = await addEmailToQueue("sendEmail", { email: user.email, subject: "Verify your email", token: emailVerificationToken });
+  //   console.log("Email added to queue:: ", jobId);
+  // }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
 
   const updatedUser = await User.findById(user._id)
     .select("-password -refreshToken")
@@ -169,45 +181,45 @@ const logOut = asyncHandler(async (req, res) => {
 });
 
 const verifyEmail = asyncHandler(async (req, res) => {
-    const { token } = req.params;
+  const { token } = req.params;
 
-    doesArgExist(!token, 400, "no token provided");
+  doesArgExist(!token, 400, "no token provided");
 
-    let decodedToken;
-    try {
-        decodedToken = jwt.verify(token, process.env.EMAIL_VERIFICATION_TOKEN_SECRET);
-    } catch (error) {
-        throw new ApiError(401, "Invalid or expired token");
-    }
+  let decodedToken;
+  try {
+    decodedToken = jwt.verify(token, process.env.EMAIL_VERIFICATION_TOKEN_SECRET);
+  } catch (error) {
+    throw new ApiError(401, "Invalid or expired token");
+  }
 
-    const user = await User.findById(decodedToken._id);
+  const user = await User.findById(decodedToken._id);
 
-    doesArgExist(!user, 404, "user not found");
+  doesArgExist(!user, 404, "user not found");
 
-    if (user.isEmailVerified) {
-        return res.status(200).json(new ApiResponse(200, {}, "Email already verified"));
-    }
+  if (user.isEmailVerified) {
+    return res.status(200).json(new ApiResponse(200, {}, "Email already verified"));
+  }
 
-    user.isEmailVerified = true;
-    await user.save({ validateBeforeSave: false });
+  user.isEmailVerified = true;
+  await user.save({ validateBeforeSave: false });
 
-    return res.status(200).json(new ApiResponse(200, {}, "email verified successfully"));
+  return res.status(200).json(new ApiResponse(200, {}, "email verified successfully"));
 });
 
 const getAllUsers = asyncHandler(async (req, res) => {
-    // TODO: pagination
-    const {user} = req;
-    validateRole("admin", user.role);
+  // TODO: pagination
+  const { user } = req;
+  // validateRole("admin", user.role);
 
-    const users = await User.find().select("-password -refreshToken").lean();
+  const users = await User.find().select("-password -refreshToken").lean();
 
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            { users },
-            "Users fetched successfully"
-        )
-    );
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      { users },
+      "Users fetched successfully"
+    )
+  );
 });
 const tryMe = async (req, res) => {
   return res

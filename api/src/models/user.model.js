@@ -5,9 +5,14 @@ import bcrypt from "bcrypt";
 
 const userSchema = new mongoose.Schema(
   {
-    name: {
+    firstName: {
       type: String,
-      required: [true, "Name is required"],
+      required: [true, "first name is required"],
+      trim: true,
+    },
+    lastName: {
+      type: String,
+      required: [true, "last name is required"],
       trim: true,
     },
     email: {
@@ -22,10 +27,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "password is required"],
     },
+    phoneNumber: {
+      type: String,
+      unique: true,
+      index: true,
+    },
     role: {
-        type: String,
-        enum: ROLES,
-        default: "guest",
+      type: String,
+      enum: ROLES,
+      default: "guest",
     },
     isEmailVerified: {
       type: Boolean,
@@ -73,15 +83,15 @@ userSchema.methods.generateRefreshToken = async function () {
   );
 };
 userSchema.methods.generateEmailVerificationToken = async function () {
-    return jwt.sign(
-        {
-            _id: this._id,
-        },
-        process.env.EMAIL_VERIFICATION_TOKEN_SECRET,
-        {
-            expiresIn: process.env.EMAIL_VERIFICATION_TOKEN_EXPIRY
-        }
-    )
+  return jwt.sign(
+    {
+      _id: this._id,
+    },
+    process.env.EMAIL_VERIFICATION_TOKEN_SECRET,
+    {
+      expiresIn: process.env.EMAIL_VERIFICATION_TOKEN_EXPIRY
+    }
+  )
 };
 
 export const User = mongoose.model("Users", userSchema);

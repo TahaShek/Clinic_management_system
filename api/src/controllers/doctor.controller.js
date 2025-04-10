@@ -29,7 +29,7 @@ const registerDoctor = asyncHandler(async (req, res) => {
             doctor: doctor._id,
             status: "Pending"
         });
-        admin.save();
+        await admin.save();
     } else {
         throw new ApiError(404, "No admins found to ping doctos request");
     }

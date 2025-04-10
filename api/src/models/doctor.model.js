@@ -9,21 +9,30 @@ const doctorSchema = new mongoose.Schema({
         unique: true,
         index: true,
     },
+    bio: {
+        type: String,
+    },
     specialization: {
         type: String,
         required: true,
     },
     qualifications: [String],
-    experience: {
+    yearsOfExperience: {
         type: Number,
         required: true,
     },
-    department: {
+    education: {
         type: String,
     },
-    contactNumber: {
+    hospitalAffiliation: {
         type: String,
         required: true,
+    },
+    officeAddress: {
+        type: String,
+    },
+    officePhone: {
+        type: String,
     },
     consultationFee: {
         type: Number,
@@ -39,6 +48,11 @@ const doctorSchema = new mongoose.Schema({
             endTime: String,
         },
     ],
+    prefferedCommunication: {
+        type: String,
+        default: "Phone",
+        enum: ["Phone", "Email", "Sms"]
+    },
     patients: [
         {
             type: mongoose.Schema.Types.ObjectId,
